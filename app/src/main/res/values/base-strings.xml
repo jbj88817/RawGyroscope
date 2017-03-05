@@ -16,15 +16,5 @@
 -->
 
 <resources>
-    <string name="app_name">Camera2Raw</string>
-    <string name="intro_message">
-        <![CDATA[
-        
-            
-            This sample demonstrates how to use the Camera2 API to capture RAW
-            camera buffers and save them as DNG files.
-            
-        
-        ]]>
-    </string>
+    <string name="app_name">RawGyroscope</string>
 </resources>
