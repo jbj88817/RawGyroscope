@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-package us.bojie.rawgyroscope.camera;
+package us.bojie.rawgyroscope;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 
-import us.bojie.rawgyroscope.R;
+import us.bojie.rawgyroscope.camera.Camera2RawFragment;
 
 /**
  * Activity displaying a fragment that implements RAW photo captures.
  */
 public class CameraActivity extends Activity implements Camera2RawFragment.ResultListener {
+
+    public static final String KEY_RESULT = "result";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +43,9 @@ public class CameraActivity extends Activity implements Camera2RawFragment.Resul
 
     @Override
     public void onResult(String result) {
-
+        Intent intent = new Intent(this, ResultActivity.class);
+        intent.putExtra(KEY_RESULT, result);
+        startActivity(intent);
     }
+
 }

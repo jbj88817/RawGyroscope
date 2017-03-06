@@ -596,8 +596,6 @@ public class Camera2RawFragment extends Fragment
                 finishedCaptureLocked();
             }
 
-            showToast(sb.toString());
-
             // gyroscope
             handler.post(runnable);
         }
