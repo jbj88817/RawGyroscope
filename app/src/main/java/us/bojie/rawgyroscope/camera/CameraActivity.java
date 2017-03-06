@@ -24,7 +24,7 @@ import us.bojie.rawgyroscope.R;
 /**
  * Activity displaying a fragment that implements RAW photo captures.
  */
-public class CameraActivity extends Activity {
+public class CameraActivity extends Activity implements Camera2RawFragment.ResultListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,4 +37,9 @@ public class CameraActivity extends Activity {
         }
     }
 
+
+    @Override
+    public void onResult(String result) {
+
+    }
 }

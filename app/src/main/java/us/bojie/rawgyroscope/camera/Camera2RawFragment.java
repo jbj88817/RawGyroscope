@@ -123,12 +123,20 @@ import us.bojie.rawgyroscope.gyroscope.Orientation;
  * </ul>
  */
 public class Camera2RawFragment extends Fragment
-        implements View.OnClickListener, FragmentCompat.OnRequestPermissionsResultCallback {
+        implements View.OnClickListener,
+        FragmentCompat.OnRequestPermissionsResultCallback{
 
+
+    public interface ResultListener {
+        void onResult(String result);
+    }
     /**
      * Conversion from screen rotation to JPEG orientation.
      */
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
+
+    ResultListener mListener;
+    String mResult;
 
     static {
         ORIENTATIONS.append(Surface.ROTATION_0, 0);
@@ -362,10 +370,10 @@ public class Camera2RawFragment extends Fragment
 
 
     // Result fields
-    String XAxis;
-    String YAxis;
-    String ZAxis;
-    String mFilePathAndName;
+    static String XAxis;
+    static String YAxis;
+    static String ZAxis;
+    static String mFilePathAndName;
 
     //**********************************************************************************************
 
@@ -648,6 +656,24 @@ public class Camera2RawFragment extends Fragment
                 }
             }
         };
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof ResultListener) {
+            mListener = (ResultListener) context;
+        } else {
+            throw new RuntimeException("StartResultsFragmentCallback not implemented in CameraActivity");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        if (mListener != null) {
+            mListener = null;
+        }
+        super.onDetach();
     }
 
     @Override
@@ -1344,6 +1370,12 @@ public class Camera2RawFragment extends Fragment
      */
     private static class ImageSaver implements Runnable {
 
+        protected interface Listener{
+            void callback(String result);
+        }
+
+        Listener mListener;
+
         /**
          * The image to save.
          */
@@ -1443,6 +1475,14 @@ public class Camera2RawFragment extends Fragment
                             public void onScanCompleted(String path, Uri uri) {
                                 Log.i(TAG, "Scanned " + path + ":");
                                 Log.i(TAG, "-> uri=" + uri);
+
+//                                StringBuilder sb = new StringBuilder();
+//                                sb.append("FilePath:" + mFilePathAndName + "\n");
+//                                sb.append("XAxis: " + XAxis + ", ");
+//                                sb.append("YAxis: " + YAxis + ", ");
+//                                sb.append("ZAxis: " + ZAxis);
+//                                Log.i(TAG, "onScanCompleted:!!!! " + sb.toString());
+
                             }
                         });
             }
@@ -1886,8 +1926,15 @@ public class Camera2RawFragment extends Fragment
                 XAxis = String.format("%.2f", Math.toDegrees(vOrientation[0]));
                 YAxis = String.format("%.2f", Math.toDegrees(vOrientation[1]));
                 ZAxis = String.format("%.2f", Math.toDegrees(vOrientation[2]));
-                Log.i(TAG, "!!!!run: " + " XAxis " + XAxis + " YAxis " + YAxis + " ZAxis " + ZAxis);
 
+                StringBuilder sb = new StringBuilder();
+                sb.append("FilePath:" + mFilePathAndName + "\n");
+                sb.append("XAxis: " + XAxis + ", ");
+                sb.append("YAxis: " + YAxis + ", ");
+                sb.append("ZAxis: " + ZAxis);
+                Log.i(TAG, "onResult:!!!! " + sb.toString());
+
+                mListener.onResult(sb.toString());
             }
         };
     }

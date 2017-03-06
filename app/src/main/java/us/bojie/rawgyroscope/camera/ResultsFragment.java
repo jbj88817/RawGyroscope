@@ -37,7 +37,7 @@ public class ResultsFragment extends Fragment {
 
     // TODO: Customize parameter initialization
     @SuppressWarnings("unused")
-    public static ResultsFragment newInstance(int columnCount) {
+    public static ResultsFragment newInstance(String result, int columnCount) {
         ResultsFragment fragment = new ResultsFragment();
         Bundle args = new Bundle();
         args.putInt(ARG_COLUMN_COUNT, columnCount);
