@@ -1276,9 +1276,9 @@ public class Camera2RawFragment extends Fragment
 
             // Create an ImageSaverBuilder in which to collect results, and add it to the queue
             // of active requests.
-            ImageSaver.ImageSaverBuilder jpegBuilder = new ImageSaver.ImageSaverBuilder(activity)
+            ImageSaver.ImageSaverBuilder jpegBuilder = new ImageSaver.ImageSaverBuilder(activity, mListener)
                     .setCharacteristics(mCharacteristics);
-            ImageSaver.ImageSaverBuilder rawBuilder = new ImageSaver.ImageSaverBuilder(activity)
+            ImageSaver.ImageSaverBuilder rawBuilder = new ImageSaver.ImageSaverBuilder(activity, mListener)
                     .setCharacteristics(mCharacteristics);
 
             mJpegResultQueue.put((int) request.getTag(), jpegBuilder);
@@ -1368,12 +1368,6 @@ public class Camera2RawFragment extends Fragment
      */
     private static class ImageSaver implements Runnable {
 
-        protected interface Listener{
-            void callback(String result);
-        }
-
-        Listener mListener;
-
         /**
          * The image to save.
          */
@@ -1401,17 +1395,21 @@ public class Camera2RawFragment extends Fragment
         /**
          * A reference counted wrapper for the ImageReader that owns the given image.
          */
+
+        private ResultListener mListener;
+
         private final RefCountedAutoCloseable<ImageReader> mReader;
 
         private ImageSaver(Image image, File file, CaptureResult result,
                            CameraCharacteristics characteristics, Context context,
-                           RefCountedAutoCloseable<ImageReader> reader) {
+                           RefCountedAutoCloseable<ImageReader> reader, ResultListener listener) {
             mImage = image;
             mFile = file;
             mCaptureResult = result;
             mCharacteristics = characteristics;
             mContext = context;
             mReader = reader;
+            mListener = listener;
         }
 
         @Override
@@ -1474,12 +1472,13 @@ public class Camera2RawFragment extends Fragment
                                 Log.i(TAG, "Scanned " + path + ":");
                                 Log.i(TAG, "-> uri=" + uri);
 
-//                                StringBuilder sb = new StringBuilder();
-//                                sb.append("FilePath:" + mFilePathAndName + "\n");
-//                                sb.append("XAxis: " + XAxis + ", ");
-//                                sb.append("YAxis: " + YAxis + ", ");
-//                                sb.append("ZAxis: " + ZAxis);
-//                                Log.i(TAG, "onScanCompleted:!!!! " + sb.toString());
+                                StringBuilder sb = new StringBuilder();
+                                sb.append("FilePath:" + mFilePathAndName + "\n");
+                                sb.append("XAxis: " + XAxis + ", ");
+                                sb.append("YAxis: " + YAxis + ", ");
+                                sb.append("ZAxis: " + ZAxis);
+
+                                mListener.onResult(sb.toString());
 
                             }
                         });
@@ -1497,6 +1496,7 @@ public class Camera2RawFragment extends Fragment
             private CaptureResult mCaptureResult;
             private CameraCharacteristics mCharacteristics;
             private Context mContext;
+            private ResultListener mListener;
             private RefCountedAutoCloseable<ImageReader> mReader;
 
             /**
@@ -1504,9 +1504,11 @@ public class Camera2RawFragment extends Fragment
              *
              * @param context a {@link Context} to for accessing the
              *                {@link android.provider.MediaStore}.
+             * @param listener
              */
-            public ImageSaverBuilder(final Context context) {
+            public ImageSaverBuilder(final Context context, ResultListener listener) {
                 mContext = context;
+                mListener = listener;
             }
 
             public synchronized ImageSaverBuilder setRefCountedReader(
@@ -1547,7 +1549,7 @@ public class Camera2RawFragment extends Fragment
                     return null;
                 }
                 return new ImageSaver(mImage, mFile, mCaptureResult, mCharacteristics, mContext,
-                        mReader);
+                        mReader, mListener);
             }
 
             public synchronized String getSaveLocation() {
@@ -1925,14 +1927,6 @@ public class Camera2RawFragment extends Fragment
                 YAxis = String.format("%.2f", Math.toDegrees(vOrientation[1]));
                 ZAxis = String.format("%.2f", Math.toDegrees(vOrientation[2]));
 
-                StringBuilder sb = new StringBuilder();
-                sb.append("FilePath:" + mFilePathAndName + "\n");
-                sb.append("XAxis: " + XAxis + ", ");
-                sb.append("YAxis: " + YAxis + ", ");
-                sb.append("ZAxis: " + ZAxis);
-                Log.i(TAG, "onResult:!!!! " + sb.toString());
-
-                mListener.onResult(sb.toString());
             }
         };
     }
