@@ -360,6 +360,13 @@ public class Camera2RawFragment extends Fragment
     protected Handler handler;
     protected Runnable runnable;
 
+
+    // Result fields
+    String XAxis;
+    String YAxis;
+    String ZAxis;
+    String mFilePathAndName;
+
     //**********************************************************************************************
 
     /**
@@ -575,6 +582,8 @@ public class Camera2RawFragment extends Fragment
                     if (jpegBuilder != null) sb.append(", ");
                     sb.append("Saving RAW as: ");
                     sb.append(rawBuilder.getSaveLocation());
+                    Log.i(TAG, "onCaptureCompleted!!!!!: " + sb.toString());
+                    mFilePathAndName = rawBuilder.getSaveLocation();
                 }
                 finishedCaptureLocked();
             }
@@ -1868,18 +1877,16 @@ public class Camera2RawFragment extends Fragment
 
         handler = new Handler();
 
-        runnable = new Runnable()
-        {
+        runnable = new Runnable() {
             @Override
-            public void run()
-            {
+            public void run() {
                 vOrientation = orientation.getOrientation();
                 dataReady = true;
 
-                String XAxis = String.format("%.2f", Math.toDegrees(vOrientation[0]));
-                String YAxis = String.format("%.2f", Math.toDegrees(vOrientation[1]));
-                String ZAxis = String.format("%.2f", Math.toDegrees(vOrientation[2]));
-                Log.d(TAG, "!!!!run: " + " XAxis " + XAxis + " YAxis " + YAxis + " ZAxis " + ZAxis);
+                XAxis = String.format("%.2f", Math.toDegrees(vOrientation[0]));
+                YAxis = String.format("%.2f", Math.toDegrees(vOrientation[1]));
+                ZAxis = String.format("%.2f", Math.toDegrees(vOrientation[2]));
+                Log.i(TAG, "!!!!run: " + " XAxis " + XAxis + " YAxis " + YAxis + " ZAxis " + ZAxis);
 
             }
         };
