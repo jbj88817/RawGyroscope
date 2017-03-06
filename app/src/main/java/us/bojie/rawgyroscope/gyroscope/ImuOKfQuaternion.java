@@ -3,9 +3,6 @@ package us.bojie.rawgyroscope.gyroscope;
 import android.content.Context;
 import android.hardware.SensorManager;
 
-import com.kircherelectronics.gyroscopeexplorer.activity.filter.kalman.RotationKalmanFilter;
-import com.kircherelectronics.gyroscopeexplorer.activity.filter.kalman.RotationMeasurementModel;
-import com.kircherelectronics.gyroscopeexplorer.activity.filter.kalman.RotationProcessModel;
 
 import org.apache.commons.math3.complex.Quaternion;
 

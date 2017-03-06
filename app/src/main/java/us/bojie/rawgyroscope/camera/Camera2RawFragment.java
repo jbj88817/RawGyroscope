@@ -88,6 +88,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import us.bojie.rawgyroscope.R;
+import us.bojie.rawgyroscope.gyroscope.GyroscopeOrientation;
 import us.bojie.rawgyroscope.gyroscope.Orientation;
 
 /**
@@ -356,6 +357,8 @@ public class Camera2RawFragment extends Fragment
 
     private float[] vOrientation = new float[3];
     private Orientation orientation;
+    protected Handler handler;
+    protected Runnable runnable;
 
     //**********************************************************************************************
 
@@ -577,6 +580,9 @@ public class Camera2RawFragment extends Fragment
             }
 
             showToast(sb.toString());
+
+            // gyroscope
+            handler.post(runnable);
         }
 
         @Override
@@ -656,6 +662,7 @@ public class Camera2RawFragment extends Fragment
 
         // Gyroscope
 
+        reset();
         orientation.onResume();
 
     }
@@ -668,6 +675,7 @@ public class Camera2RawFragment extends Fragment
         closeCamera();
         stopBackgroundThread();
         super.onPause();
+        orientation.onPause();
     }
 
     @Override
@@ -1855,5 +1863,25 @@ public class Camera2RawFragment extends Fragment
                 PackageManager.FEATURE_SENSOR_GYROSCOPE);
     }
 
+    private void reset() {
+        orientation = new GyroscopeOrientation(getActivity());
 
+        handler = new Handler();
+
+        runnable = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                vOrientation = orientation.getOrientation();
+                dataReady = true;
+
+                String XAxis = String.format("%.2f", Math.toDegrees(vOrientation[0]));
+                String YAxis = String.format("%.2f", Math.toDegrees(vOrientation[1]));
+                String ZAxis = String.format("%.2f", Math.toDegrees(vOrientation[2]));
+                Log.d(TAG, "!!!!run: " + " XAxis " + XAxis + " YAxis " + YAxis + " ZAxis " + ZAxis);
+
+            }
+        };
+    }
 }
