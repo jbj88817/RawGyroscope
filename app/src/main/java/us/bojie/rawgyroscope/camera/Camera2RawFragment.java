@@ -55,6 +55,7 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
+import android.support.v13.app.FragmentCompat;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.util.Size;
@@ -66,7 +67,6 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
-import android.support.v13.app.FragmentCompat;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -88,6 +88,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import us.bojie.rawgyroscope.R;
+import us.bojie.rawgyroscope.gyroscope.Orientation;
 
 /**
  * A fragment that demonstrates use of the Camera2 API to capture RAW and JPEG photos.
@@ -347,6 +348,14 @@ public class Camera2RawFragment extends Fragment
      * taking too long.
      */
     private long mCaptureTimer;
+
+    // Gyroscope fields
+    private boolean isCalibrated;
+    private boolean gyroscopeAvailable;
+    private boolean dataReady = false;
+
+    private float[] vOrientation = new float[3];
+    private Orientation orientation;
 
     //**********************************************************************************************
 
@@ -644,6 +653,11 @@ public class Camera2RawFragment extends Fragment
         if (mOrientationListener != null && mOrientationListener.canDetectOrientation()) {
             mOrientationListener.enable();
         }
+
+        // Gyroscope
+
+        orientation.onResume();
+
     }
 
     @Override
@@ -699,7 +713,7 @@ public class Camera2RawFragment extends Fragment
 
                 // We only use a camera that supports RAW in this sample.
                 if (!contains(characteristics.get(
-                                CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES),
+                        CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES),
                         CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_RAW)) {
                     continue;
                 }
@@ -924,8 +938,8 @@ public class Camera2RawFragment extends Fragment
 
             // Here, we create a CameraCaptureSession for camera preview.
             mCameraDevice.createCaptureSession(Arrays.asList(surface,
-                            mJpegImageReader.get().getSurface(),
-                            mRawImageReader.get().getSurface()), new CameraCaptureSession.StateCallback() {
+                    mJpegImageReader.get().getSurface(),
+                    mRawImageReader.get().getSurface()), new CameraCaptureSession.StateCallback() {
                         @Override
                         public void onConfigured(CameraCaptureSession cameraCaptureSession) {
                             synchronized (mCameraStateLock) {
@@ -983,7 +997,7 @@ public class Camera2RawFragment extends Fragment
         if (!mNoAFRun) {
             // If there is a "continuous picture" mode available, use it, otherwise default to AUTO.
             if (contains(mCharacteristics.get(
-                            CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES),
+                    CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES),
                     CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)) {
                 builder.set(CaptureRequest.CONTROL_AF_MODE,
                         CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
@@ -996,7 +1010,7 @@ public class Camera2RawFragment extends Fragment
         // If there is an auto-magical flash control mode available, use it, otherwise default to
         // the "on" mode, which is guaranteed to always be available.
         if (contains(mCharacteristics.get(
-                        CameraCharacteristics.CONTROL_AE_AVAILABLE_MODES),
+                CameraCharacteristics.CONTROL_AE_AVAILABLE_MODES),
                 CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH)) {
             builder.set(CaptureRequest.CONTROL_AE_MODE,
                     CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
@@ -1007,7 +1021,7 @@ public class Camera2RawFragment extends Fragment
 
         // If there is an auto-magical white balance control mode available, use it.
         if (contains(mCharacteristics.get(
-                        CameraCharacteristics.CONTROL_AWB_AVAILABLE_MODES),
+                CameraCharacteristics.CONTROL_AWB_AVAILABLE_MODES),
                 CaptureRequest.CONTROL_AWB_MODE_AUTO)) {
             // Allow AWB to run auto-magically if this device supports this
             builder.set(CaptureRequest.CONTROL_AWB_MODE,
@@ -1403,17 +1417,17 @@ public class Camera2RawFragment extends Fragment
             if (success) {
                 MediaScannerConnection.scanFile(mContext, new String[]{mFile.getPath()},
                 /*mimeTypes*/null, new MediaScannerConnection.MediaScannerConnectionClient() {
-                    @Override
-                    public void onMediaScannerConnected() {
-                        // Do nothing
-                    }
+                            @Override
+                            public void onMediaScannerConnected() {
+                                // Do nothing
+                            }
 
-                    @Override
-                    public void onScanCompleted(String path, Uri uri) {
-                        Log.i(TAG, "Scanned " + path + ":");
-                        Log.i(TAG, "-> uri=" + uri);
-                    }
-                });
+                            @Override
+                            public void onScanCompleted(String path, Uri uri) {
+                                Log.i(TAG, "Scanned " + path + ":");
+                                Log.i(TAG, "-> uri=" + uri);
+                            }
+                        });
             }
         }
 
@@ -1621,7 +1635,7 @@ public class Camera2RawFragment extends Fragment
      * @return The optimal {@code Size}, or an arbitrary one if none were big enough
      */
     private static Size chooseOptimalSize(Size[] choices, int textureViewWidth,
-            int textureViewHeight, int maxWidth, int maxHeight, Size aspectRatio) {
+                                          int textureViewHeight, int maxWidth, int maxHeight, Size aspectRatio) {
         // Collect the supported resolutions that are at least as big as the preview Surface
         List<Size> bigEnough = new ArrayList<>();
         // Collect the supported resolutions that are smaller than the preview Surface
@@ -1632,7 +1646,7 @@ public class Camera2RawFragment extends Fragment
             if (option.getWidth() <= maxWidth && option.getHeight() <= maxHeight &&
                     option.getHeight() == option.getWidth() * h / w) {
                 if (option.getWidth() >= textureViewWidth &&
-                    option.getHeight() >= textureViewHeight) {
+                        option.getHeight() >= textureViewHeight) {
                     bigEnough.add(option);
                 } else {
                     notBigEnough.add(option);
@@ -1833,5 +1847,13 @@ public class Camera2RawFragment extends Fragment
         }
 
     }
+
+    // Starting gyroscope
+
+    private boolean gyroscopeAvailable() {
+        return getActivity().getPackageManager().hasSystemFeature(
+                PackageManager.FEATURE_SENSOR_GYROSCOPE);
+    }
+
 
 }

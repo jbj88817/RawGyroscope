@@ -26,5 +26,6 @@ dependencies {
     })
     compile 'com.android.support:appcompat-v7:25.2.0'
     compile "com.android.support:support-v13:25.2.0"
+    compile files('libs/commons-math3-3.5.jar')
     testCompile 'junit:junit:4.12'
 }
